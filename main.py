@@ -7,7 +7,7 @@ from discord import app_commands
 from discord.ext import commands
 import yt_dlp
 
-# --- 1. FLASK WEB SERVER CHO RENDER & UPTIMEROBOT ---
+# --- 1. WEB SERVER FLASK DÙNG CHO RENDER & UPTIMEROBOT ---
 app = Flask('')
 
 @app.route('/')
@@ -52,7 +52,7 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Lỗi sync lệnh: {e}")
 
-# Hàm tìm kiếm nhạc async không gây đơ bot
+# Tìm kiếm bài hát dạng Async để không gây đơ bot
 async def search_yt(query):
     def _search():
         with yt_dlp.YoutubeDL(YTDL_OPTIONS) as ytdl:
@@ -66,7 +66,7 @@ async def search_yt(query):
 @bot.tree.command(name="play", description="Tìm và phát nhạc từ YouTube")
 @app_commands.describe(query="Tên bài hát hoặc URL")
 async def play(interaction: discord.Interaction, query: str):
-    # Dòng bắt buộc để hoãn phản hồi 3s của Discord
+    # Hoãn phản hồi để tránh lỗi hết hạn 3 giây của Discord
     await interaction.response.defer()
 
     if not interaction.user.voice:
@@ -75,7 +75,7 @@ async def play(interaction: discord.Interaction, query: str):
     voice_channel = interaction.user.voice.channel
     guild_id = interaction.guild_id
 
-    # Kết nối phòng voice an toàn
+    # Kết nối phòng voice
     voice_client = interaction.guild.voice_client
     if not voice_client:
         try:
@@ -85,7 +85,7 @@ async def play(interaction: discord.Interaction, query: str):
     elif voice_client.channel.id != voice_channel.id:
         await voice_client.move_to(voice_channel)
 
-    # Tìm kiếm bài hát
+    # Tìm bài hát
     info = await search_yt(query)
     if not info:
         return await interaction.followup.send("❌ Không tìm thấy bài hát!")
