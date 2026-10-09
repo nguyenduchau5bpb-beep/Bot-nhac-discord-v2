@@ -1,4 +1,5 @@
-discord.py
+git+https://github.com/Rapptz/discord.py
 yt-dlp
 Flask
 PyNaCl
+davey
