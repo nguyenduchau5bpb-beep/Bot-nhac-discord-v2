@@ -6,13 +6,17 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 import yt_dlp
+import static_ffmpeg
 
-# --- 1. WEB SERVER FLASK DÙNG CHO RENDER & UPTIMEROBOT ---
+# --- CÀI TỰ ĐỘNG FFMPEG VÀO NỀN TẢNG RENDER ---
+static_ffmpeg.add_paths()
+
+# --- 1. WEB SERVER FLASK DUY TRÌ UPTIME ---
 app = Flask('')
 
 @app.route('/')
 def home():
-    return "Bot nhạc Discord 24/7 đang hoạt động mượt mà!"
+    return "Bot nhạc Discord 24/7 đang chạy mượt mà!"
 
 def run_flask():
     port = int(os.environ.get("PORT", 8080))
@@ -33,7 +37,7 @@ YTDL_OPTIONS = {
     'noplaylist': True,
     'quiet': True,
     'default_search': 'ytsearch',
-    'extract_flat': False,
+    'source_address': '0.0.0.0',
 }
 
 FFMPEG_OPTIONS = {
@@ -52,7 +56,7 @@ async def on_ready():
     except Exception as e:
         print(f"❌ Lỗi sync lệnh: {e}")
 
-# Tìm kiếm bài hát dạng Async để không gây đơ bot
+# Tìm nhạc Async tránh gây đơ Event Loop
 async def search_yt(query):
     def _search():
         with yt_dlp.YoutubeDL(YTDL_OPTIONS) as ytdl:
@@ -66,7 +70,7 @@ async def search_yt(query):
 @bot.tree.command(name="play", description="Tìm và phát nhạc từ YouTube")
 @app_commands.describe(query="Tên bài hát hoặc URL")
 async def play(interaction: discord.Interaction, query: str):
-    # Hoãn phản hồi để tránh lỗi hết hạn 3 giây của Discord
+    # Hoãn phản hồi 3s của Discord ngay lập tức
     await interaction.response.defer()
 
     if not interaction.user.voice:
@@ -75,7 +79,6 @@ async def play(interaction: discord.Interaction, query: str):
     voice_channel = interaction.user.voice.channel
     guild_id = interaction.guild_id
 
-    # Kết nối phòng voice
     voice_client = interaction.guild.voice_client
     if not voice_client:
         try:
@@ -85,7 +88,6 @@ async def play(interaction: discord.Interaction, query: str):
     elif voice_client.channel.id != voice_channel.id:
         await voice_client.move_to(voice_channel)
 
-    # Tìm bài hát
     info = await search_yt(query)
     if not info:
         return await interaction.followup.send("❌ Không tìm thấy bài hát!")
